@@ -1,5 +1,5 @@
 # pyseqr/__init__.py
 
-from .core import placeholder_function
+from .core import find_in_list
 
-__all__ = ["placeholder_function"]
+__all__ = ["find_in_list"]
