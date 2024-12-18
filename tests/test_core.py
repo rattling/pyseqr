@@ -45,7 +45,7 @@ class CustomStrObject:
         return f"CustomStrObject({self.value})"
 
 
-# Custom class without a string representation
+# Custom class without a string representation (they will just use default __str__ method)
 class NoStrObject:
     def __init__(self, value):
         self.value = value
@@ -73,6 +73,18 @@ unhashable_test_cases = [
     ([1, {2: 3}, 4], [1, {2: 3}, 4], [[0]]),  # Dictionary
 ]
 
+# Test cases for float_precision
+float_precision_test_cases = [
+    (
+        [1.111, 2.222, 3.333],
+        [1.1111, 2.2222, 3.3333],
+        [],
+        None,
+    ),  # Default precision
+    ([1.111, 2.222, 3.333], [1.1111, 2.2222, 3.3333], [[0, 1, 2]], 3),  # Precision 3
+    ([1.111, 2.222, 3.333], [1.1111, 2.2222, 3.3333], [], 4),  # Precision 4
+]
+
 
 @pytest.mark.parametrize("sublist, target, expected", basic_test_cases)
 def test_find_in_list(sublist, target, expected):
@@ -96,3 +108,11 @@ def test_find_in_list_custom_objects(sublist, target, expected):
         # Test the function output normally
         result = find_in_list(sublist, target, custom_objects=True)
         assert result == expected
+
+
+@pytest.mark.parametrize(
+    "sublist, target, expected, precision", float_precision_test_cases
+)
+def test_find_in_list_float_precision(sublist, target, expected, precision):
+    result = find_in_list(sublist, target, float_precision=precision)
+    assert result == expected
