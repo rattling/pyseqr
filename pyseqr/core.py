@@ -1,5 +1,6 @@
 from typing import List, Sequence, Any
 from decimal import Decimal, getcontext, InvalidOperation, ROUND_HALF_UP
+import bisect
 
 
 def validate_inputs(sublist: Sequence[Any], target: Sequence[Any]) -> None:
@@ -19,6 +20,8 @@ def round_as_decimal(num, decimal_places=2):
     :type num: int, float, decimal, or str
     :returns: Rounded Decimal
     :rtype: decimal.Decimal
+
+    https://stackoverflow.com/questions/8868985/problems-with-rounding-decimals-python solution by kamalgill
     """
 
     getcontext().prec = decimal_places + 1
@@ -27,7 +30,7 @@ def round_as_decimal(num, decimal_places=2):
 
 
 def make_hashable(
-    element: Any, convert_unhashable, custom_objects, float_precision=None
+    element: Any, convert_unhashable_flag, custom_objects_flag, float_precision=None
 ) -> Any:
     """
     Convert certain unhashable elements to hashable types recursively.
@@ -39,7 +42,7 @@ def make_hashable(
         except (InvalidOperation, ValueError):
             raise ValueError("Invalid float precision.")
 
-    if convert_unhashable:
+    if convert_unhashable_flag:
         if isinstance(element, list):
             return tuple(make_hashable(e) for e in element)
         elif isinstance(element, dict):
@@ -47,7 +50,7 @@ def make_hashable(
         elif isinstance(element, set):
             return frozenset(make_hashable(e) for e in element)
 
-    if custom_objects:
+    if custom_objects_flag:
         # Check if the element is a custom object (i.e., not a built-in type)
         if type(element).__module__ != "builtins":
             # Ensure the custom object has a string representation
@@ -61,12 +64,30 @@ def make_hashable(
     return element
 
 
+def remove_overlaps(indices, max_index):
+    # Find the first index where the value is greater than max_index
+    pos = bisect.bisect_right(indices, max_index)
+    return indices[pos:]
+
+
+def find_ordered_element(indices, max_index):
+    # Find the first index where the value is greater than max_index
+    pos = bisect.bisect_right(indices, max_index)
+    # pop the value at pos and return it
+    if pos < len(indices):
+        return indices.pop(pos)
+    else:
+        return None
+
+
 def find_in_list(
     sublist: Sequence[Any],
     target: Sequence[Any],
-    convert_unhashable: bool = False,
-    custom_objects: bool = False,
+    convert_unhashable_flag: bool = False,
+    custom_objects_flag: bool = False,
     float_precision: int = None,
+    occurrence_gap_flag: str = "any",
+    element_gap_flag: str = "any",
 ) -> List[List[int]]:
     """
     Find all occurrences of the `sublist` in the `target` in O(n) time where n is target list size.
@@ -77,11 +98,15 @@ def find_in_list(
     Parameters:
         sublist (List[int]): The list of elements to find in `target`.
         target (List[int]): The list of elements to search in.
-        convert_unhashable (bool): If True, convert unhashable elements to hashable types.
-        custom_objects (bool): If True, use the string representation of custom objects.
+        convert_unhashable_flag (bool): If True, convert unhashable elements to hashable types.
+        custom_objects_flag (bool): If True, use the string representation of custom objects.
             NOTE: Objects with a default string representation that are not the same instance will not match.
             The user can define a custom string representation for their objects to ensure matches on equivalent instances.
         float_precision (int): If provided, round floating-point numbers to this precision for better matching.
+        occurrence_gap_flag (str): If "any", allow occurrences of the sublist to overlap.
+            If "non-negative", ensure that there is no overlap
+        element_gap_flag (str): If "any", allow elements of the sublist to be in any order.
+            If "non-negative", ensure that the elements are in the same order as the sublist.
 
     Returns:
         List[List[int]]: A list of lists, where each sublist represents the indices of
@@ -105,12 +130,12 @@ def find_in_list(
     validate_inputs(sublist, target)
 
     # Convert elements to hashable types
-    if convert_unhashable or custom_objects or float_precision:
+    if convert_unhashable_flag or custom_objects_flag or float_precision:
         sublist = [
             make_hashable(
                 e,
-                convert_unhashable=convert_unhashable,
-                custom_objects=custom_objects,
+                convert_unhashable_flag=convert_unhashable_flag,
+                custom_objects_flag=custom_objects_flag,
                 float_precision=float_precision,
             )
             for e in sublist
@@ -118,8 +143,8 @@ def find_in_list(
         target = [
             make_hashable(
                 e,
-                convert_unhashable=convert_unhashable,
-                custom_objects=custom_objects,
+                convert_unhashable_flag=convert_unhashable_flag,
+                custom_objects_flag=custom_objects_flag,
                 float_precision=float_precision,
             )
             for e in target
@@ -141,11 +166,28 @@ def find_in_list(
         return []
 
     occurrences = []
+    max_index = -1
     while True:
         current_occurrence = []
         for element in sublist:
+            found_index = None
             if index_map[element]:
-                current_occurrence.append(index_map[element].pop(0))
+                if occurrence_gap_flag == "non-negative":  # overlap logic
+                    index_map[element] = remove_overlaps(
+                        index_map[element], max_index
+                    )  # overlap logic
+                if element_gap_flag == "non-negative":
+                    found_index = find_ordered_element(
+                        index_map[element],
+                        current_occurrence[-1] if current_occurrence else -1,
+                    )
+                else:
+                    found_index = (
+                        index_map[element].pop(0) if index_map[element] else None
+                    )
+            if found_index is not None:
+                current_occurrence.append(found_index)
             else:
                 return occurrences
         occurrences.append(current_occurrence)
+        max_index = max(current_occurrence)

@@ -106,7 +106,12 @@ def test_find_in_list_custom_objects(sublist, target, expected):
             find_in_list(sublist, target, custom_objects=True)
     else:
         # Test the function output normally
-        result = find_in_list(sublist, target, custom_objects=True)
+        result = find_in_list(
+            sublist,
+            target,
+            custom_objects_flag=True,
+            float_precision=None,
+        )
         assert result == expected
 
 
@@ -115,4 +120,51 @@ def test_find_in_list_custom_objects(sublist, target, expected):
 )
 def test_find_in_list_float_precision(sublist, target, expected, precision):
     result = find_in_list(sublist, target, float_precision=precision)
+    assert result == expected
+
+
+flag_test_cases = [
+    (
+        [1, 2],
+        [2, 2, 2, 3, 2, 1, 1, 1, 7, 1, 2],
+        "any",
+        "any",
+        [[5, 0], [6, 1], [7, 2], [9, 4]],
+    ),  #  any occurrence gap, any element gap
+    (
+        [1, 2],
+        [2, 2, 2, 3, 2, 1, 1, 1, 7, 1, 2],
+        "non-negative",
+        "any",
+        [[5, 0], [6, 10]],
+    ),  #  no negative occurrence gap (overlap), any element gap
+    (
+        [1, 2],
+        [1, 3, 1, 7, 2, 8, 2, 9, 1, 2],
+        "any",
+        "non-negative",
+        [[0, 4], [2, 6], [8, 9]],
+    ),  #  any occurrence gap, no negative element gap (i.e ordered)
+    (
+        [1, 2],
+        [1, 3, 1, 7, 2, 8, 2, 9, 1, 2],
+        "non-negative",
+        "non-negative",
+        [[0, 4], [8, 9]],
+    ),  #  no negative occurrence gap (overlap),, no negative element gap (i.e ordered)
+]
+
+
+@pytest.mark.parametrize(
+    "sublist, target, occurrence_gap_flag, element_gap_flag, expected", flag_test_cases
+)
+def test_find_in_list_flags(
+    sublist, target, occurrence_gap_flag, element_gap_flag, expected
+):
+    result = find_in_list(
+        sublist,
+        target,
+        occurrence_gap_flag=occurrence_gap_flag,
+        element_gap_flag=element_gap_flag,
+    )
     assert result == expected
