@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pyseqr",
-    version="1.0.0-test",
+    version="1.0.0-dev0",
     packages=find_packages(),
     description="A Python library for sequence search and analysis.",
     long_description=open("README.md").read(),
