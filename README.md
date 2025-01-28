@@ -17,7 +17,7 @@ The `find_in_list` function operates with a time complexity of **O(m + n + k * m
 - `n` is the length of the `target` list.
 - `k` is the number of occurrences found.
 
-While not strictly linear, the implementation is optimized for efficiency using hashing and binary search, making it performant for large datasets with reasonable `m` and `k`.
+While not strictly linear, the implementation is optimized for efficiency using hashing and binary search, making it performant for large datasets with reasonable `m` and `k`. i.e. it approaches O(n) for the common set of tasks where we look for a relatively small set of items, sparsely distributed in a larger list.
 
 
 
