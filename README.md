@@ -2,7 +2,7 @@
 
 PySeqr is a Python library for sequence search and analysis. It provides a simple and efficient way to find all occurrences of a sublist in a target list.
 
-PySeqr supports unordered, ordered, and non-overlapping occurrences. It also allows you to specify the gap between occurrences and elements. PySeqr can handle custom objects and floating-point numbers with a specified precision.
+PySeqr supports unordered, ordered, overlapping and non-overlapping occurrences. It also allows you to specify the gap between occurrences and elements. PySeqr can handle custom objects and floating-point numbers with a specified precision.
 
 Note that all sequence elements must be hashable for matching. Custom objects will match on their string representation. If you wish to match on a unhashable built-in Python data type (e.g. list, dictionary, set), you can set the `ensure_hashable` flag to `True`.
 
